@@ -4,17 +4,17 @@ import { IReview } from '../types/index';
 const reviewSchema = new Schema<IReview>(
   {
     exchange: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'Exchange',
       required: true,
     },
     reviewer: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
     },
     reviewee: {
-      type: Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
     },

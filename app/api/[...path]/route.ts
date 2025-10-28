@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5001';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const pathString = params.path.join('/');
+    const resolvedParams = await params;
+    const pathString = resolvedParams.path.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
     const url = `${BACKEND_URL}/api/${pathString}${searchParams ? `?${searchParams}` : ''}`;
 
@@ -39,11 +40,12 @@ export async function GET(
 }
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { path: string[] } }
+ request: NextRequest,
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const pathString = params.path.join('/');
+    const resolvedParams = await params;
+    const pathString = resolvedParams.path.join('/');
     const url = `${BACKEND_URL}/api/${pathString}`;
 
     let body = null;
@@ -87,10 +89,11 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const pathString = params.path.join('/');
+    const resolvedParams = await params;
+    const pathString = resolvedParams.path.join('/');
     const url = `${BACKEND_URL}/api/${pathString}`;
 
     let body = null;
@@ -134,10 +137,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const pathString = params.path.join('/');
+    const resolvedParams = await params;
+    const pathString = resolvedParams.path.join('/');
     const url = `${BACKEND_URL}/api/${pathString}`;
 
     const response = await fetch(url, {
