@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Users, Zap, TrendingUp, Settings } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface DashboardStats {
   stats: {
@@ -24,11 +25,11 @@ interface DashboardStats {
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const { token } = useAuth()
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const token = localStorage.getItem("token")
         if (!token) {
           window.location.href = "/auth/login"
           return
@@ -56,11 +57,11 @@ export default function AdminDashboardPage() {
     }
 
     fetchDashboard()
-  }, [])
+  }, [token])
 
   if (loading) {
     return <div className="container mx-auto px-4 py-12">Loading...</div>
-  }
+ }
 
   if (!data) {
     return (

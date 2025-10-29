@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -13,30 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Users, LogOut, UserCircle, BarChart3 } from "lucide-react"
 import { toast } from "sonner"
-
-interface User {
-  _id: string
-  firstName: string
-  lastName: string
-  email: string
-}
+import { useAuth } from "@/contexts/AuthContext"
 
 export function Navbar() {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const userStr = localStorage.getItem("user")
-    if (userStr) {
-      setUser(JSON.parse(userStr))
-    }
-    setIsLoading(false)
-  }, [])
+ const { user, logout } = useAuth()
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
+    logout()
     toast.success("Logged out successfully")
     router.push("/")
   }
@@ -51,7 +34,7 @@ export function Navbar() {
           </Link>
 
           <div className="flex items-center gap-4">
-            {!isLoading && !user ? (
+            {!user ? (
               <>
                 <Link href="/">
                   <Button variant="ghost">Browse Skills</Button>

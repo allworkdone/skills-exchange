@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface Skill {
   _id: string
@@ -23,11 +24,15 @@ export default function AdminSkillsPage() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
+  const { token } = useAuth()
 
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const token = localStorage.getItem("token")
+        if (!token) {
+          window.location.href = "/auth/login"
+          return
+        }
 
         const res = await fetch("/api/admin/skills", {
           headers: { Authorization: `Bearer ${token}` },
@@ -45,7 +50,7 @@ export default function AdminSkillsPage() {
     }
 
     fetchSkills()
-  }, [])
+  }, [token])
 
   const filteredSkills = skills.filter(
     (skill) =>

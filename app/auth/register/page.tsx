@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     firstName: "",
@@ -47,8 +49,7 @@ export default function RegisterPage() {
         return
       }
 
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
+      login(data.user, data.token)
       toast.success("Account created successfully!")
       router.push("/onboarding")
     } catch (error) {
@@ -133,7 +134,7 @@ export default function RegisterPage() {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="•••••••"
                 value={formData.password}
                 onChange={handleChange}
                 required

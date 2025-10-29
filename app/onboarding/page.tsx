@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Plus, X } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
 
 const SKILL_CATEGORIES = ["Technology", "Music", "Creative", "Language", "Fitness", "Culinary", "Business", "Crafts", "Other"]
 const PROFICIENCY_LEVELS = ["Beginner", "Intermediate", "Advanced", "Expert"]
@@ -22,6 +23,7 @@ interface SkillForm {
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const { token } = useAuth()
   const [loading, setLoading] = useState(false)
   const [skills, setSkills] = useState<SkillForm[]>([])
   const [currentSkill, setCurrentSkill] = useState<SkillForm>({
@@ -47,7 +49,7 @@ export default function OnboardingPage() {
     toast.success("Skill added!")
   }
 
-  const handleRemoveSkill = (index: number) => {
+ const handleRemoveSkill = (index: number) => {
     setSkills(skills.filter((_, i) => i !== index))
   }
 
@@ -60,8 +62,6 @@ export default function OnboardingPage() {
     setLoading(true)
 
     try {
-      const token = localStorage.getItem("token")
-
       for (const skill of skills) {
         await fetch("/api/skills", {
           method: "POST",

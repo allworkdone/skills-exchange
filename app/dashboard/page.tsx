@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Star, Users, Zap } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface User {
   _id: string
@@ -37,6 +38,7 @@ interface Exchange {
 }
 
 export default function DashboardPage() {
+  const { user: contextUser, token } = useAuth()
   const [user, setUser] = useState<User | null>(null)
   const [skills, setSkills] = useState<Skill[]>([])
   const [exchanges, setExchanges] = useState<Exchange[]>([])
@@ -45,7 +47,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token")
         if (!token) {
           window.location.href = "/auth/login"
           return
@@ -64,7 +65,8 @@ export default function DashboardPage() {
         ])
 
         if (userRes.ok) {
-          setUser(await userRes.json())
+          const userData = await userRes.json();
+          setUser(userData);
         }
         if (skillsRes.ok) {
           setSkills(await skillsRes.json())
@@ -81,10 +83,14 @@ export default function DashboardPage() {
     }
 
     fetchData()
-  }, [])
+  }, [token])
 
   if (loading) {
     return <div className="container mx-auto px-4 py-12">Loading...</div>
+  }
+
+  if (!contextUser) {
+    return <div className="container mx-auto px-4 py-12">Loading user data...</div>
   }
 
   const completedExchanges = exchanges.filter((e) => e.status === "completed").length
@@ -94,7 +100,7 @@ export default function DashboardPage() {
     <div className="container mx-auto px-4 py-12">
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {user?.firstName}!</h1>
+          <h1 className="text-3xl font-bold">Welcome back, {contextUser.firstName}!</h1>
           <p className="text-muted-foreground mt-2">Manage your skills and exchanges</p>
         </div>
 
@@ -129,7 +135,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Rating</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <p className="text-2xl font-bold">{user?.rating.toFixed(1)}</p>
+                    <p className="text-2xl font-bold">{user?.rating.toFixed(1) || "0.0"}</p>
                     <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   </div>
                 </div>
@@ -240,8 +246,8 @@ export default function DashboardPage() {
             <h2 className="text-xl font-bold">Profile Information</h2>
             <Card>
               <CardHeader>
-                <CardTitle>{user?.firstName} {user?.lastName}</CardTitle>
-                <CardDescription>{user?.email}</CardDescription>
+                <CardTitle>{contextUser.firstName} {contextUser.lastName}</CardTitle>
+                <CardDescription>{contextUser.email}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>

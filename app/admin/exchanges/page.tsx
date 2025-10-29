@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface Exchange {
   _id: string
@@ -38,11 +39,15 @@ export default function AdminExchangesPage() {
   const [exchanges, setExchanges] = useState<Exchange[]>([])
   const [statusFilter, setStatusFilter] = useState("all")
   const [loading, setLoading] = useState(true)
+  const { token } = useAuth()
 
   useEffect(() => {
     const fetchExchanges = async () => {
       try {
-        const token = localStorage.getItem("token")
+        if (!token) {
+          window.location.href = "/auth/login"
+          return
+        }
 
         const res = await fetch("/api/admin/exchanges", {
           headers: { Authorization: `Bearer ${token}` },
@@ -60,7 +65,7 @@ export default function AdminExchangesPage() {
     }
 
     fetchExchanges()
-  }, [])
+  }, [token])
 
   const filteredExchanges = statusFilter === "all"
     ? exchanges

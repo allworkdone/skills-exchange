@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Send } from "lucide-react"
 import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface Chat {
   _id: string
@@ -30,11 +31,11 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { token, user } = useAuth()
 
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const token = localStorage.getItem("token")
         if (!token) {
           window.location.href = "/auth/login"
           return
@@ -62,7 +63,7 @@ export default function ChatPage() {
     fetchChats()
     const interval = setInterval(fetchChats, 3000)
     return () => clearInterval(interval)
-  }, [])
+  }, [token])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -78,8 +79,6 @@ export default function ChatPage() {
     setSending(true)
 
     try {
-      const token = localStorage.getItem("token")
-
       const res = await fetch(`/api/chats/${selectedChat._id}/messages`, {
         method: "POST",
         headers: {
@@ -120,7 +119,7 @@ export default function ChatPage() {
   }
 
   const otherUser = selectedChat?.users.find(
-    (u) => u._id !== (JSON.parse(localStorage.getItem("user") || "{}") as any)._id
+    (u) => u._id !== user?._id
   )
 
   return (
@@ -135,7 +134,7 @@ export default function ChatPage() {
               <div className="space-y-2 p-4">
                 {chats.map((chat) => {
                   const other = chat.users.find(
-                    (u) => u._id !== (JSON.parse(localStorage.getItem("user") || "{}") as any)._id
+                    (u) => u._id !== user?._id
                   )
                   return (
                     <button
@@ -182,7 +181,7 @@ export default function ChatPage() {
               <ScrollArea className="h-[calc(100vh-300px)]" ref={scrollRef}>
                 <div className="space-y-4 p-6">
                   {selectedChat.messages.map((msg) => {
-                    const isOwn = msg.sender._id === (JSON.parse(localStorage.getItem("user") || "{}") as any)._id
+                    const isOwn = msg.sender._id === user?._id
                     return (
                       <div
                         key={msg._id}

@@ -17,6 +17,7 @@ import {
 import { Trash2, Search, ArrowLeft } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface User {
   _id: string
@@ -34,11 +35,15 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const { token } = useAuth()
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const token = localStorage.getItem("token")
+        if (!token) {
+          window.location.href = "/auth/login"
+          return
+        }
 
         const res = await fetch("/api/admin/users", {
           headers: { Authorization: `Bearer ${token}` },
@@ -56,14 +61,12 @@ export default function AdminUsersPage() {
     }
 
     fetchUsers()
-  }, [])
+  }, [token])
 
   const handleDeleteUser = async (userId: string) => {
     setDeleting(userId)
 
     try {
-      const token = localStorage.getItem("token")
-
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },

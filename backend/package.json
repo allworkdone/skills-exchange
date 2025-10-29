@@ -4,7 +4,8 @@
   "description": "Node.js Express backend for the SkillSwap platform with MongoDB integration and real-time chat using Socket.io.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx tsx server.ts"
   },
   "keywords": [],
   "author": "",
