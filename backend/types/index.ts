@@ -25,7 +25,7 @@ export interface ISkill extends Document {
  category: SkillCategory;
   description: string;
   proficiencyLevel: ProficiencyLevel;
-  user: string;
+  user: string | Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -23,7 +23,7 @@ const skillSchema = new Schema<ISkill>(
       default: 'Beginner',
     },
     user: {
-      type: String,
+      type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },

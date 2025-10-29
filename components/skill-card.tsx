@@ -5,7 +5,30 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowRight, MapPin, Clock } from "lucide-react"
-import type { Skill } from "@/lib/mock-data"
+
+interface User {
+ id: string
+ _id: string
+ firstName: string
+ lastName: string
+ name: string
+ avatar: string
+ location: string
+ bio: string
+}
+
+interface Skill {
+  id: string
+  userId: string
+ user: User
+ offering: string
+ offeringCategory: string
+  seeking: string
+ seekingCategory: string
+  description: string
+ level: "Beginner" | "Intermediate" | "Advanced"
+  availability: string
+}
 
 interface SkillCardProps {
   skill: Skill

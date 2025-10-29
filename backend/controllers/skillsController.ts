@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Skill } from '../models/Skill';
 import { User } from '../models/User';
+import { Types } from 'mongoose';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -51,7 +52,18 @@ export const getSkills = async (req: Request, res: Response): Promise<void> => {
 
     const filter: any = {};
     if (category) filter.category = category;
-    if (userId) filter.user = userId;
+    if (userId && typeof userId === 'string') {
+      // Handle both string and ObjectId formats for user field
+      try {
+        filter.$or = [
+          { user: userId },
+          { user: new Types.ObjectId(userId) }
+        ];
+      } catch (error) {
+        // If the userId is not a valid ObjectId format, just search for string match
+        filter.user = userId;
+      }
+    }
 
     const skills = await Skill.find(filter).populate('user', 'firstName lastName profilePicture location');
 
@@ -67,7 +79,21 @@ export const getUserSkills = async (
   res: Response
 ): Promise<void> => {
   try {
-    const skills = await Skill.find({ user: (req as any).userId });
+    // Handle both string and ObjectId formats for user field
+    const userId = (req as any).userId;
+    let skills;
+    
+    try {
+      skills = await Skill.find({ 
+        $or: [
+          { user: userId },
+          { user: new Types.ObjectId(userId) }
+        ]
+      });
+    } catch (error) {
+      // If the userId is not a valid ObjectId format, just search for string match
+      skills = await Skill.find({ user: userId });
+    }
 
     res.status(200).json(skills);
   } catch (error) {

@@ -1,12 +1,35 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { HeroSection } from "@/components/hero-section"
 import { SearchFilter } from "@/components/search-filter"
 import { SkillCard } from "@/components/skill-card"
 import { ExchangeRequestDialog } from "@/components/exchange-request-dialog"
-import { mockSkills, type Skill } from "@/lib/mock-data"
+
+interface User {
+  id: string
+  _id: string
+  firstName: string
+ lastName: string
+ name: string
+ avatar: string
+ location: string
+ bio: string
+}
+
+interface Skill {
+  id: string
+  userId: string
+ user: User
+ offering: string
+ offeringCategory: string
+  seeking: string
+ seekingCategory: string
+  description: string
+ level: "Beginner" | "Intermediate" | "Advanced"
+  availability: string
+}
 
 export default function HomePage() {
   const router = useRouter()
@@ -14,8 +37,57 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [skills, setSkills] = useState<Skill[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredSkills = mockSkills.filter((skill) => {
+ useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const response = await fetch('/api/skills')
+        if (response.ok) {
+          const apiSkills = await response.json()
+          
+          // Transform API skills to match the expected format
+          const transformedSkills = apiSkills.map((apiSkill: any) => ({
+            id: apiSkill._id,
+            userId: apiSkill.user._id,
+            user: {
+              _id: apiSkill.user._id,
+              firstName: apiSkill.user.firstName,
+              lastName: apiSkill.user.lastName,
+              profilePicture: apiSkill.user.profilePicture,
+              location: apiSkill.user.location || "Location not specified",
+              bio: apiSkill.user.bio || "No bio available",
+              // Add computed fields to match mock data structure
+              get name() {
+                return `${this.firstName} ${this.lastName}`
+              },
+              get avatar() {
+                return this.profilePicture || "/placeholder-user.jpg"
+              }
+            },
+            offering: apiSkill.name,
+            offeringCategory: apiSkill.category,
+            seeking: "Not specified", // This field doesn't exist in the API, so using a default
+            seekingCategory: "Other", // This field doesn't exist in the API, so using a default
+            description: apiSkill.description,
+            level: apiSkill.proficiencyLevel as "Beginner" | "Intermediate" | "Advanced" | undefined || "Intermediate",
+            availability: "Flexible" // This field doesn't exist in the API, so using a default
+          }))
+          
+          setSkills(transformedSkills)
+        }
+      } catch (error) {
+        console.error("Error fetching skills:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSkills()
+  }, [])
+
+  const filteredSkills = skills.filter((skill) => {
     const matchesSearch =
       searchQuery === "" ||
       skill.offering.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -36,7 +108,7 @@ export default function HomePage() {
   }
 
   const handleRequestExchange = (skillId: string) => {
-    const skill = mockSkills.find((s) => s.id === skillId)
+    const skill = skills.find((s) => s.id === skillId)
     if (skill) {
       setSelectedSkill(skill)
       setDialogOpen(true)

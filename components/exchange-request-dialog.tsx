@@ -17,7 +17,30 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, CheckCircle2 } from "lucide-react"
-import type { Skill } from "@/lib/mock-data"
+
+interface User {
+  id: string
+  _id: string
+  firstName: string
+ lastName: string
+ name: string
+ avatar: string
+ location: string
+ bio: string
+}
+
+interface Skill {
+  id: string
+  userId: string
+ user: User
+ offering: string
+ offeringCategory: string
+ seeking: string
+ seekingCategory: string
+ description: string
+ level: "Beginner" | "Intermediate" | "Advanced"
+  availability: string
+}
 
 interface ExchangeRequestDialogProps {
   open: boolean
