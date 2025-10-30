@@ -76,15 +76,12 @@ export const sendMessage = async (
       return;
     }
 
-    const message = {
-      _id: String(Date.now()),
+    (chat.messages as any).push({
       sender: (req as any).userId,
       content,
       timestamp: new Date(),
       read: false,
-    };
-
-    chat.messages.push(message);
+    });
     await chat.save();
 
     const updatedChat = await Chat.findById(chatId)

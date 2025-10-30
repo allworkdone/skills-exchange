@@ -1,21 +1,131 @@
 "use client"
 
-import { use, useState } from "react"
+import { use, useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Mail, ArrowLeft } from "lucide-react"
-import { mockUsers, mockSkills, type Skill } from "@/lib/mock-data"
 import { ExchangeRequestDialog } from "@/components/exchange-request-dialog"
 import Link from "next/link"
 
+interface ApiUser {
+  _id: string
+  firstName: string
+  lastName: string
+  email: string
+  bio?: string
+  location?: string
+  profilePicture?: string
+ rating?: number
+ skills: string[]
+}
+
+interface User {
+  id: string
+  _id: string
+ firstName: string
+ lastName: string
+ name: string
+  avatar: string
+  location: string
+  bio: string
+}
+
+interface ApiSkill {
+  _id: string
+ userId: string
+ name: string
+  category: string
+  description: string
+  proficiencyLevel: string
+  availability: string
+}
+
+interface Skill {
+  id: string
+  userId: string
+  user: User
+  offering: string
+  offeringCategory: string
+  seeking: string
+ seekingCategory: string
+  description: string
+  level: "Beginner" | "Intermediate" | "Advanced"
+  availability: string
+}
+
 export default function ProfilePage({ params }: { params: Promise<{ userId: string }> }) {
   const { userId } = use(params)
-  const user = mockUsers.find((u) => u.id === userId)
-  const userSkills = mockSkills.filter((s) => s.userId === userId)
+  const [user, setUser] = useState<User | null>(null)
+  const [userSkills, setUserSkills] = useState<Skill[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(`/api/users/${userId}`)
+        if (response.ok) {
+          const userData: ApiUser = await response.json()
+          
+          // Transform user data to match expected format
+          const transformedUser: User = {
+            ...userData,
+            id: userData._id,
+            name: `${userData.firstName} ${userData.lastName}`,
+            avatar: userData.profilePicture || "/placeholder-user.jpg",
+            location: userData.location || "Location not specified",
+            bio: userData.bio || "No bio available"
+          }
+          setUser(transformedUser)
+          
+          // Fetch skills for this user
+          const skillsResponse = await fetch(`/api/skills/user/${userId}`)
+          if (skillsResponse.ok) {
+            const skillsData: ApiSkill[] = await skillsResponse.json()
+            
+            // Transform skills data to match expected format
+            const transformedSkills = skillsData.map((skill: ApiSkill) => ({
+              id: skill._id,
+              userId: skill.userId,
+              user: transformedUser,
+              offering: skill.name,
+              offeringCategory: skill.category,
+              seeking: "Not specified", // This field doesn't exist in the API, so using a default
+              seekingCategory: "Other", // This field doesn't exist in the API, so using a default
+              description: skill.description,
+              level: skill.proficiencyLevel as "Beginner" | "Intermediate" | "Advanced" | undefined || "Intermediate",
+              availability: skill.availability || "Flexible" // This field doesn't exist in the API, so using a default
+            }))
+            
+            setUserSkills(transformedSkills)
+          }
+        } else {
+          console.error('Failed to fetch user:', response.status)
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (userId) {
+      fetchUser()
+    }
+  }, [userId])
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-12 flex justify-center">
+        <div className="text-center">
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!user) {
     return (

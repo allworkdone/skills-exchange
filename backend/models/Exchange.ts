@@ -28,6 +28,10 @@ const exchangeSchema = new Schema<IExchange>(
       enum: ['pending', 'accepted', 'rejected', 'scheduled', 'completed', 'cancelled'],
       default: 'pending',
     },
+    message: {
+      type: String,
+      default: '',
+    },
     scheduledDate: {
       type: Date,
       default: null,

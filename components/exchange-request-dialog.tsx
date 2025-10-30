@@ -22,23 +22,23 @@ interface User {
   id: string
   _id: string
   firstName: string
- lastName: string
- name: string
- avatar: string
- location: string
- bio: string
+  lastName: string
+  name: string
+  avatar: string
+  location: string
+  bio: string
 }
 
 interface Skill {
   id: string
   userId: string
- user: User
- offering: string
- offeringCategory: string
- seeking: string
- seekingCategory: string
- description: string
- level: "Beginner" | "Intermediate" | "Advanced"
+  user: User
+  offering: string
+  offeringCategory: string
+  seeking: string
+  seekingCategory: string
+  description: string
+  level: "Beginner" | "Intermediate" | "Advanced"
   availability: string
 }
 
@@ -52,15 +52,86 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
   const [message, setMessage] = useState("")
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("[v0] Exchange request submitted:", { skillId: skill?.id, message })
-    setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
-      setMessage("")
-      onOpenChange(false)
-    }, 2000)
+    
+    try {
+      // Get the current user's ID from the auth context
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('User not authenticated')
+        return
+      }
+      
+      // Get the recipient's skill ID and determine the current user's skill ID
+      // For now, we'll assume the current user wants to exchange their first skill
+      const currentUserIdResponse = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (!currentUserIdResponse.ok) {
+        console.error('Failed to get current user')
+        return
+      }
+      const currentUser = await currentUserIdResponse.json()
+      
+      // Find the current user's skill that matches what the recipient is seeking
+      const currentUsersResponse = await fetch(`/api/users/${currentUser._id}`)
+      if (!currentUsersResponse.ok) {
+        console.error('Failed to get current user details')
+        return
+      }
+      const currentUserDetails = await currentUsersResponse.json()
+      
+      const currentUsersSkillsResponse = await fetch(`/api/skills/user/${currentUser._id}`)
+      if (!currentUsersSkillsResponse.ok) {
+        console.error('Failed to get current user skills')
+        return
+      }
+      const currentUserSkills = await currentUsersSkillsResponse.json()
+      
+      // For simplicity, we'll use the first skill of the current user
+      // In a real implementation, we might want to let the user choose which skill to offer
+      const initiatorSkillId = currentUserSkills[0]?._id
+      
+      if (!initiatorSkillId) {
+        console.error('Current user has no skills to offer')
+        return
+      }
+      
+      // Prepare the exchange request data
+      const exchangeData = {
+        recipientId: skill?.user._id || skill?.user.id,
+        initiatorSkillId: initiatorSkillId,
+        recipientSkillId: skill?.id,
+        message: message
+      }
+      
+      // Send the exchange request to the backend
+      const response = await fetch('/api/exchanges/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(exchangeData)
+      })
+      
+      if (response.ok) {
+        console.log('Exchange request sent successfully')
+        setSubmitted(true)
+        setTimeout(() => {
+          setSubmitted(false)
+          setMessage("")
+          onOpenChange(false)
+        }, 2000)
+      } else {
+        console.error('Failed to send exchange request:', await response.text())
+      }
+    } catch (error) {
+      console.error('Error sending exchange request:', error)
+    }
   }
 
   const handleClose = () => {

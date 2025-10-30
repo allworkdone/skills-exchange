@@ -14,10 +14,24 @@ export const requestExchange = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { recipientId, initiatorSkillId, recipientSkillId } = req.body;
+    const { recipientId, initiatorSkillId, recipientSkillId, message } = req.body;
+
+    console.log('Received exchange request with data:', {
+      recipientId,
+      initiatorSkillId,
+      recipientSkillId,
+      message,
+      userId: (req as any).userId
+    });
 
     if (!recipientId || !initiatorSkillId || !recipientSkillId) {
-      res.status(400).json({ error: 'All fields are required' });
+      const missingFields = [];
+      if (!recipientId) missingFields.push('recipientId');
+      if (!initiatorSkillId) missingFields.push('initiatorSkillId');
+      if (!recipientSkillId) missingFields.push('recipientSkillId');
+      
+      console.log('Missing required fields:', missingFields);
+      res.status(400).json({ error: 'All fields are required', missing: missingFields });
       return;
     }
 
@@ -27,6 +41,7 @@ export const requestExchange = async (
       initiatorSkill: initiatorSkillId,
       recipientSkill: recipientSkillId,
       status: 'pending',
+      message: message || '', // Add message field if provided
     });
 
     await exchange.save();
@@ -42,6 +57,17 @@ export const requestExchange = async (
       exchange: exchange._id,
     });
     await chat.save();
+    
+    // Add the initial message to the chat after the chat is created
+    if (message) {
+      (chat.messages as any).push({
+        sender: (req as any).userId,
+        content: message,
+        timestamp: new Date(),
+        read: false,
+      });
+      await chat.save();
+    }
 
     res.status(201).json({
       message: 'Exchange request sent',

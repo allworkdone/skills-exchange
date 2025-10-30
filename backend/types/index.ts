@@ -35,10 +35,11 @@ export interface IExchange extends Document {
   initiator: string;
   recipient: string;
   initiatorSkill: string;
-  recipientSkill: string;
+ recipientSkill: string;
  status: ExchangeStatus;
+  message?: string;
   scheduledDate?: Date;
-  completedDate?: Date;
+ completedDate?: Date;
   initiatorRating?: number;
   recipientRating?: number;
   initiatorReview?: string;

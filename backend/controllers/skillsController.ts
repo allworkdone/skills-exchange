@@ -48,7 +48,9 @@ export const createSkill = async (
 
 export const getSkills = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { category, userId } = req.query;
+    const { category } = req.query;
+    // Check for userId in both query parameters and route parameters
+    const userId = req.query.userId || req.params.userId;
 
     const filter: any = {};
     if (category) filter.category = category;
