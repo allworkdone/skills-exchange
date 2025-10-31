@@ -47,6 +47,7 @@ io.on('connection', (socket) => {
 
   socket.on('user_online', (userId: string) => {
     activeUsers.set(socket.id, userId);
+    console.log(`User online: ${userId}`);
     io.emit('user_status_update', {
       userId,
       status: 'online',

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Send } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
+import SocketService from "@/lib/socket"
 
 interface Chat {
   _id: string
@@ -32,8 +33,12 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const { token, user } = useAuth()
+  const socketService = SocketService.getInstance()
 
   useEffect(() => {
+    if (!token) return;
+    socketService.connect(token);
+
     const fetchChats = async () => {
       try {
         if (!token) {
@@ -60,10 +65,44 @@ export default function ChatPage() {
       }
     }
 
-    fetchChats()
-    const interval = setInterval(fetchChats, 3000)
-    return () => clearInterval(interval)
+    fetchChats();
+    
+    socketService.on('new_message', (data) => {
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat._id === data.chatId) {
+            return {
+              ...chat,
+              messages: [...chat.messages, data.message],
+              updatedAt: new Date().toISOString()
+            };
+          }
+          return chat;
+        });
+      });
+
+      if (selectedChat && selectedChat._id === data.chatId) {
+        setSelectedChat(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            messages: [...prev.messages, data.message],
+            updatedAt: new Date().toISOString()
+          };
+        });
+      }
+    });
+
+    return () => {
+      socketService.off('new_message');
+    };
   }, [token])
+
+  useEffect(() => {
+    if (selectedChat && token) {
+      socketService.joinChat(selectedChat._id);
+    }
+  }, [selectedChat?._id, token])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -92,6 +131,16 @@ export default function ChatPage() {
         const data = await res.json()
         setSelectedChat(data.chat)
         setMessage("")
+        socketService.sendMessage({
+          chatId: selectedChat._id,
+          message: {
+            _id: data.chat.messages[data.chat.messages.length - 1]._id,
+            sender: { _id: user?._id, firstName: user?.firstName, lastName: user?.lastName },
+            content: message,
+            timestamp: new Date().toISOString(),
+            read: false
+          }
+        });
       }
     } catch (error) {
       toast.error("Failed to send message")
