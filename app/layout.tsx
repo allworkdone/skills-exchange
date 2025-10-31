@@ -18,7 +18,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SkillSwap - Exchange Skills, Build Community",
   description: "Connect with people in your area to trade skills without money.",
-    generator: 'v0.app'
 }
 
 export default function RootLayout({
