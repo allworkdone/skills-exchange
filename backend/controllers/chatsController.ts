@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Chat } from '../models/Chat';
+import { successResponse, errorResponse, sendResponse } from '../utils/response';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -16,10 +17,10 @@ export const getChats = async (
       .populate('exchange')
       .sort({ updatedAt: -1 });
 
-    res.status(200).json(chats);
+    sendResponse(res, successResponse(chats, 'Chats retrieved successfully'));
   } catch (error) {
     console.error('Get chats error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -36,19 +37,19 @@ export const getChat = async (
       .populate('messages.sender', 'firstName lastName profilePicture');
 
     if (!chat) {
-      res.status(404).json({ error: 'Chat not found' });
+      sendResponse(res, errorResponse('Chat not found', 404));
       return;
     }
 
     if (!chat.users.map((u: any) => u._id.toString()).includes((req as any).userId)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
-    res.status(200).json(chat);
+    sendResponse(res, successResponse(chat, 'Chat retrieved successfully'));
  } catch (error) {
     console.error('Get chat error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -61,18 +62,18 @@ export const sendMessage = async (
     const { content } = req.body;
 
     if (!content) {
-      res.status(400).json({ error: 'Message content is required' });
+      sendResponse(res, errorResponse('Message content is required', 400));
       return;
     }
 
     const chat = await Chat.findById(chatId);
     if (!chat) {
-      res.status(404).json({ error: 'Chat not found' });
+      sendResponse(res, errorResponse('Chat not found', 404));
       return;
     }
 
     if (!chat.users.map((u) => u.toString()).includes((req as any).userId)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -88,13 +89,10 @@ export const sendMessage = async (
       .populate('users', 'firstName lastName profilePicture')
       .populate('messages.sender', 'firstName lastName profilePicture');
 
-    res.status(201).json({
-      message: 'Message sent',
-      chat: updatedChat,
-    });
+    sendResponse(res, successResponse({ chat: updatedChat }, 'Message sent successfully', 201));
   } catch (error) {
     console.error('Send message error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -107,7 +105,7 @@ export const markAsRead = async (
 
     const chat = await Chat.findById(chatId);
     if (!chat) {
-      res.status(404).json({ error: 'Chat not found' });
+      sendResponse(res, errorResponse('Chat not found', 404));
       return;
     }
 
@@ -119,9 +117,9 @@ export const markAsRead = async (
 
     await chat.save();
 
-    res.status(200).json({ message: 'Messages marked as read' });
+    sendResponse(res, successResponse(null, 'Messages marked as read'));
   } catch (error) {
     console.error('Mark as read error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };

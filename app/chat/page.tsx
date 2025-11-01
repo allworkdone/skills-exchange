@@ -10,29 +10,17 @@ import { MessageCircle, Send } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
 import SocketService from "@/lib/socket"
-
-interface Chat {
-  _id: string
-  users: Array<{ _id: string; firstName: string; lastName: string; profilePicture?: string }>
-  exchange?: { _id: string; status: string }
-  messages: Array<{
-    _id: string
-    sender: { _id: string; firstName: string; lastName: string }
-    content: string
-    timestamp: string
-    read: boolean
-  }>
-  updatedAt: string
-}
+import { Chat as ChatModel } from "@/lib/models/base";
+import { GetChatsResponse, GetChatResponse, SendMessageResponse } from "@/lib/models/api-response";
 
 export default function ChatPage() {
-  const [chats, setChats] = useState<Chat[]>([])
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
+  const [chats, setChats] = useState<ChatModel[]>([])
+  const [selectedChat, setSelectedChat] = useState<ChatModel | null>(null)
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
+ const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const selectedChatRef = useRef<Chat | null>(null);
+  const selectedChatRef = useRef<ChatModel | null>(null);
   const { token, user } = useAuth()
   const socketService = SocketService.getInstance()
 
@@ -57,7 +45,9 @@ export default function ChatPage() {
         })
 
         if (res.ok) {
-          const data = await res.json()
+          const response: GetChatsResponse | any = await res.json();
+          // Handle the new response format: { status, success, data, message }
+          const data = response.success ? response.data : response;
           setChats(data)
           if (data.length > 0) {
             try {
@@ -66,7 +56,8 @@ export default function ChatPage() {
               });
               
               if (firstChatRes.ok) {
-                const fullChatData = await firstChatRes.json();
+                const fullChatResponse: GetChatResponse | any = await firstChatRes.json();
+                const fullChatData = fullChatResponse.success ? fullChatResponse.data : fullChatResponse;
                 setSelectedChat(fullChatData);
               } else {
                 setSelectedChat(data[0]);
@@ -159,7 +150,9 @@ export default function ChatPage() {
           });
 
           if (res.ok) {
-            const updatedChat = await res.json();
+            const response = await res.json();
+            // Handle the new response format: { status, success, data, message }
+            const updatedChat = response.success ? response.data : response;
             setSelectedChat(updatedChat);
           }
         } catch (error) {
@@ -195,7 +188,9 @@ export default function ChatPage() {
       })
 
       if (res.ok) {
-        const data = await res.json()
+        const response: SendMessageResponse | any = await res.json();
+        // Handle the new response format: { status, success, data, message }
+        const data = response.success ? response.data : response;
         // Update the chat with the new message from the server response
         setSelectedChat(data.chat)
         setMessage("")
@@ -267,7 +262,9 @@ export default function ChatPage() {
                             });
 
                             if (res.ok) {
-                              const updatedChat = await res.json();
+                              const response = await res.json();
+                              // Handle the new response format: { status, success, data, message }
+                              const updatedChat = response.success ? response.data : response;
                               setSelectedChat(updatedChat);
                               // Also update the ref immediately
                               selectedChatRef.current = updatedChat;

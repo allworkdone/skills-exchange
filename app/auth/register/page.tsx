@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
+import { ApiResponse } from "@/lib/models/base";
+import { RegisterResponse } from "@/lib/models/api-response";
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -42,10 +44,12 @@ export default function RegisterPage() {
         body: JSON.stringify(formData),
       })
 
-      const data = await response.json()
+      const responseJson: ApiResponse<RegisterResponse> | any = await response.json();
+      // Handle the new response format: { status, success, data, message }
+      const data = responseJson.success ? responseJson.data : responseJson;
 
-      if (!response.ok) {
-        toast.error(data.error || "Registration failed")
+      if (!response.ok || !responseJson.success) {
+        toast.error(responseJson.message || responseJson.error || "Registration failed")
         return
       }
 

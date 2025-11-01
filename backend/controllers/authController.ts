@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { generateToken } from '../utils/jwt';
+import { successResponse, errorResponse, sendResponse } from '../utils/response';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -12,13 +13,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const { firstName, lastName, email, password, location } = req.body;
 
     if (!firstName || !lastName || !email || !password) {
-      res.status(400).json({ error: 'All fields are required' });
+      sendResponse(res, errorResponse('All fields are required', 400));
       return;
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      res.status(409).json({ error: 'Email already registered' });
+      sendResponse(res, errorResponse('Email already registered', 409));
       return;
     }
 
@@ -34,8 +35,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const token = generateToken(user._id.toString(), user.email);
 
-    res.status(201).json({
-      message: 'User registered successfully',
+    sendResponse(res, successResponse({ 
       token,
       user: {
         _id: user._id,
@@ -44,10 +44,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         location: user.location,
       },
-    });
+    }, 'User registered successfully', 201));
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -56,26 +56,25 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
+      sendResponse(res, errorResponse('Email and password are required', 400));
       return;
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      sendResponse(res, errorResponse('Invalid credentials', 401));
       return;
     }
 
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      sendResponse(res, errorResponse('Invalid credentials', 401));
       return;
     }
 
     const token = generateToken(user._id.toString(), user.email);
 
-    res.status(200).json({
-      message: 'Login successful',
+    sendResponse(res, successResponse({ 
       token,
       user: {
         _id: user._id,
@@ -85,10 +84,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         location: user.location,
         rating: user.rating,
       },
-    });
+    }, 'Login successful'));
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -99,13 +98,13 @@ export const getCurrentUser = async (
   try {
     const user = await User.findById((req as any).userId).populate('skills').populate('reviews');
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      sendResponse(res, errorResponse('User not found', 404));
       return;
     }
 
-    res.status(200).json(user);
+    sendResponse(res, successResponse(user, 'Current user retrieved successfully'));
  } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };

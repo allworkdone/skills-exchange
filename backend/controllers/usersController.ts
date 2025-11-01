@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
+import { successResponse, errorResponse, sendResponse } from '../utils/response';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -21,14 +22,14 @@ export const getUserProfile = async (
       });
 
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      sendResponse(res, errorResponse('User not found', 404));
       return;
     }
 
-    res.status(200).json(user);
+    sendResponse(res, successResponse(user, 'User profile retrieved successfully'));
  } catch (error) {
     console.error('Get user profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -41,7 +42,7 @@ export const updateProfile = async (
 
     const user = await User.findById((req as any).userId);
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      sendResponse(res, errorResponse('User not found', 404));
       return;
     }
 
@@ -53,13 +54,10 @@ export const updateProfile = async (
 
     await user.save();
 
-    res.status(200).json({
-      message: 'Profile updated successfully',
-      user,
-    });
+    sendResponse(res, successResponse({ user }, 'Profile updated successfully'));
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -78,15 +76,15 @@ export const getAllUsers = async (
 
     const total = await User.countDocuments();
 
-    res.status(200).json({
-      users,
-      total,
-      limit: Number(limit),
-      offset: Number(offset),
-    });
+    sendResponse(res, successResponse({ 
+      users, 
+      total, 
+      limit: Number(limit), 
+      offset: Number(offset) 
+    }, 'Users retrieved successfully'));
   } catch (error) {
     console.error('Get all users error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -98,7 +96,7 @@ export const searchUsers = async (
     const { query } = req.query;
 
     if (!query) {
-      res.status(400).json({ error: 'Search query is required' });
+      sendResponse(res, errorResponse('Search query is required', 400));
       return;
     }
 
@@ -111,9 +109,9 @@ export const searchUsers = async (
       ],
     }).populate('skills');
 
-    res.status(200).json(users);
+    sendResponse(res, successResponse(users, 'Users searched successfully'));
   } catch (error) {
     console.error('Search users error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };

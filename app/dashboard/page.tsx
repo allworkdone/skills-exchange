@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { MessageCircle, Star, Users, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/AuthContext"
+import { User as UserModel, Skill as SkillModel, Exchange as ExchangeModel, ApiResponse } from "@/lib/models/base";
+import { GetUsersResponse, GetSkillsResponse, GetExchangesResponse } from "@/lib/models/api-response";
 
 interface User {
   _id: string
@@ -65,14 +67,19 @@ export default function DashboardPage() {
         ])
 
         if (userRes.ok) {
-          const userData = await userRes.json();
+          const userResponse: ApiResponse<UserModel> | any = await userRes.json();
+          const userData = userResponse.success ? userResponse.data : userResponse;
           setUser(userData);
         }
         if (skillsRes.ok) {
-          setSkills(await skillsRes.json())
+          const skillsResponse: ApiResponse<GetSkillsResponse> | any = await skillsRes.json();
+          const skillsData = skillsResponse.success ? skillsResponse.data : skillsResponse;
+          setSkills(skillsData)
         }
         if (exchangesRes.ok) {
-          setExchanges(await exchangesRes.json())
+          const exchangesResponse: ApiResponse<GetExchangesResponse> | any = await exchangesRes.json();
+          const exchangesData = exchangesResponse.success ? exchangesResponse.data : exchangesResponse;
+          setExchanges(exchangesData)
         }
       } catch (error) {
         toast.error("Failed to load dashboard")
