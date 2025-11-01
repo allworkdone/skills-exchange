@@ -32,10 +32,16 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const selectedChatRef = useRef<Chat | null>(null);
   const { token, user } = useAuth()
   const socketService = SocketService.getInstance()
 
+  // Keep the ref updated with the current selectedChat
   useEffect(() => {
+    selectedChatRef.current = selectedChat;
+  }, [selectedChat]);
+
+   useEffect(() => {
     if (!token) return;
     socketService.connect(token);
 
@@ -54,7 +60,21 @@ export default function ChatPage() {
           const data = await res.json()
           setChats(data)
           if (data.length > 0) {
-            setSelectedChat(data[0])
+            try {
+              const firstChatRes = await fetch(`/api/chats/${data[0]._id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              
+              if (firstChatRes.ok) {
+                const fullChatData = await firstChatRes.json();
+                setSelectedChat(fullChatData);
+              } else {
+                setSelectedChat(data[0]);
+              }
+            } catch (fetchError) {
+              console.error('Failed to fetch full chat data:', fetchError);
+              setSelectedChat(data[0]);
+            }
           }
         }
       } catch (error) {
@@ -68,41 +88,88 @@ export default function ChatPage() {
     fetchChats();
     
     socketService.on('new_message', (data) => {
-      setChats(prevChats => {
-        return prevChats.map(chat => {
-          if (chat._id === data.chatId) {
+      // Check if the message is from the current user to avoid duplication
+      // The sender could be structured as an object with _id or just a string ID
+      const messageSenderId = typeof data.message.sender === 'object' ? data.message.sender._id : data.message.sender;
+      const isFromCurrentUser = messageSenderId === user?._id;
+      
+      if (!isFromCurrentUser) {
+        setChats(prevChats => {
+          return prevChats.map(chat => {
+            if (chat._id === data.chatId) {
+              // Ensure the message has proper sender information
+              const updatedMessage = {
+                ...data.message,
+                sender: {
+                  _id: messageSenderId,
+                  firstName: data.message.sender.firstName || '',
+                  lastName: data.message.sender.lastName || '',
+                }
+              };
+              return {
+                ...chat,
+                messages: [...chat.messages, updatedMessage],
+                updatedAt: new Date().toISOString()
+              };
+            }
+            return chat;
+          });
+        });
+
+        if (selectedChatRef.current && selectedChatRef.current._id === data.chatId) {
+          setSelectedChat(prev => {
+            if (!prev) return prev;
+            // Ensure the message has proper sender information
+            const updatedMessage = {
+              ...data.message,
+              sender: {
+                _id: messageSenderId,
+                firstName: data.message.sender.firstName || '',
+                lastName: data.message.sender.lastName || '',
+              }
+            };
+            const newMessages = [...prev.messages, updatedMessage];
             return {
-              ...chat,
-              messages: [...chat.messages, data.message],
+              ...prev,
+              messages: newMessages,
               updatedAt: new Date().toISOString()
             };
-          }
-          return chat;
-        });
-      });
-
-      if (selectedChat && selectedChat._id === data.chatId) {
-        setSelectedChat(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            messages: [...prev.messages, data.message],
-            updatedAt: new Date().toISOString()
-          };
-        });
+          });
+        }
       }
     });
 
     return () => {
       socketService.off('new_message');
     };
-  }, [token])
+  }, [token, user])
 
-  useEffect(() => {
+    useEffect(() => {
     if (selectedChat && token) {
+      if (selectedChat._id) {
+      }
+      
       socketService.joinChat(selectedChat._id);
+      
+      // Fetch the latest chat data when selecting a chat to ensure we have the most recent messages
+      const fetchSelectedChat = async () => {
+        try {
+          const res = await fetch(`/api/chats/${selectedChat._id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.ok) {
+            const updatedChat = await res.json();
+            setSelectedChat(updatedChat);
+          }
+        } catch (error) {
+          console.error('Failed to fetch updated chat:', error);
+        }
+      };
+
+      fetchSelectedChat();
     }
-  }, [selectedChat?._id, token])
+ }, [selectedChat?._id, token])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -129,15 +196,17 @@ export default function ChatPage() {
 
       if (res.ok) {
         const data = await res.json()
+        // Update the chat with the new message from the server response
         setSelectedChat(data.chat)
         setMessage("")
+        // Notify other users in the chat about the new message
         socketService.sendMessage({
           chatId: selectedChat._id,
           message: {
             _id: data.chat.messages[data.chat.messages.length - 1]._id,
             sender: { _id: user?._id, firstName: user?.firstName, lastName: user?.lastName },
             content: message,
-            timestamp: new Date().toISOString(),
+            timestamp: data.chat.messages[data.chat.messages.length - 1].timestamp || new Date().toISOString(),
             read: false
           }
         });
@@ -188,7 +257,26 @@ export default function ChatPage() {
                   return (
                     <button
                       key={chat._id}
-                      onClick={() => setSelectedChat(chat)}
+                      onClick={async (e) => {
+                        e.preventDefault();
+                        // Fetch the latest chat data when selecting a chat to ensure we have the most recent messages
+                        if (token) {
+                          try {
+                            const res = await fetch(`/api/chats/${chat._id}`, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            });
+
+                            if (res.ok) {
+                              const updatedChat = await res.json();
+                              setSelectedChat(updatedChat);
+                              // Also update the ref immediately
+                              selectedChatRef.current = updatedChat;
+                            }
+                          } catch (error) {
+                            console.error('Failed to fetch updated chat:', error);
+                          }
+                        }
+                      }}
                       className={`w-full text-left p-3 rounded-lg border transition-colors ${
                         selectedChat?._id === chat._id
                           ? "bg-primary text-primary-foreground"

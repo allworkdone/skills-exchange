@@ -62,7 +62,8 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('send_message', (data: any) => {
+   socket.on('send_message', (data: any) => {
+    // Emit the message to other users in the chat
     io.to(`chat_${data.chatId}`).emit('new_message', {
       message: data.message,
       chatId: data.chatId,
