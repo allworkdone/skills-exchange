@@ -68,7 +68,9 @@ export default function ProfilePage({ params }: { params: Promise<{ userId: stri
       try {
         const response = await fetch(`/api/users/${userId}`)
         if (response.ok) {
-          const userData: ApiUser = await response.json()
+          const responseData = await response.json()
+          // Handle the new response format: { status, success, data, message }
+          const userData: ApiUser = responseData.success ? responseData.data.user : responseData
           
           // Transform user data to match expected format
           const transformedUser: User = {
@@ -84,7 +86,9 @@ export default function ProfilePage({ params }: { params: Promise<{ userId: stri
           // Fetch skills for this user
           const skillsResponse = await fetch(`/api/skills/user/${userId}`)
           if (skillsResponse.ok) {
-            const skillsData: ApiSkill[] = await skillsResponse.json()
+            const skillsResponseData = await skillsResponse.json()
+            // Handle the new response format: { status, success, data, message }
+            const skillsData: ApiSkill[] = skillsResponseData.success ? skillsResponseData.data.skills : skillsResponseData
             
             // Transform skills data to match expected format
             const transformedSkills = skillsData.map((skill: ApiSkill) => ({

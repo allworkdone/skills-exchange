@@ -45,7 +45,9 @@ export default function HomePage() {
       try {
         const response = await fetch('/api/skills')
         if (response.ok) {
-          const apiSkills = await response.json()
+          const responseData = await response.json()
+          // Handle the new response format: { status, success, data, message }
+          const apiSkills = responseData.success ? responseData.data.skills : responseData
           
           // Transform API skills to match the expected format
           const transformedSkills = apiSkills.map((apiSkill: any) => ({

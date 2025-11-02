@@ -63,7 +63,7 @@ export default function OnboardingPage() {
 
     try {
       for (const skill of skills) {
-        await fetch("/api/skills", {
+        const response = await fetch("/api/skills", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -71,6 +71,13 @@ export default function OnboardingPage() {
           },
           body: JSON.stringify(skill),
         })
+        
+        const responseData = await response.json()
+        // Handle the new response format: { status, success, data, message }
+        if (!response.ok || !responseData.success) {
+          toast.error(responseData.message || "Failed to add skill")
+          return
+        }
       }
 
       toast.success("Skills added successfully!")

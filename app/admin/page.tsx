@@ -46,7 +46,10 @@ export default function AdminDashboardPage() {
         }
 
         if (res.ok) {
-          setData(await res.json())
+          const responseData = await res.json()
+          // Handle the new response format: { status, success, data, message }
+          const data = responseData.success ? responseData.data : responseData
+          setData(data)
         }
       } catch (error) {
         toast.error("Failed to load admin dashboard")

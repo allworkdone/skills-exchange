@@ -50,7 +50,10 @@ export default function AdminUsersPage() {
         })
 
         if (res.ok) {
-          setUsers(await res.json())
+          const responseData = await res.json()
+          // Handle the new response format: { status, success, data, message }
+          const usersData = responseData.success ? responseData.data.users : responseData
+          setUsers(usersData)
         }
       } catch (error) {
         toast.error("Failed to load users")

@@ -39,7 +39,10 @@ export default function AdminSkillsPage() {
         })
 
         if (res.ok) {
-          setSkills(await res.json())
+          const responseData = await res.json()
+          // Handle the new response format: { status, success, data, message }
+          const skillsData = responseData.success ? responseData.data.skills : responseData
+          setSkills(skillsData)
         }
       } catch (error) {
         toast.error("Failed to load skills")

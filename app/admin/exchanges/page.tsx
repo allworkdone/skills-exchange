@@ -54,7 +54,10 @@ export default function AdminExchangesPage() {
         })
 
         if (res.ok) {
-          setExchanges(await res.json())
+          const responseData = await res.json()
+          // Handle the new response format: { status, success, data, message }
+          const exchangesData = responseData.success ? responseData.data.exchanges : responseData
+          setExchanges(exchangesData)
         }
       } catch (error) {
         toast.error("Failed to load exchanges")

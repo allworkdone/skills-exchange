@@ -75,7 +75,9 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
         return
       }
       const currentUserResponse = await currentUserIdResponse.json()
-      const currentUser = currentUserResponse.data?.user || currentUserResponse.user
+      // Handle the new response format: { status, success, data, message }
+      const currentUserData = currentUserResponse.success ? currentUserResponse.data : currentUserResponse
+      const currentUser = currentUserData.user || currentUserData
       
       // Find the current user's skill that matches what the recipient is seeking
       const currentUsersResponse = await fetch(`/api/users/${currentUser._id}`)
@@ -84,14 +86,19 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
         return
       }
       const currentUserDetailsResponse = await currentUsersResponse.json()
-      const currentUserDetails = currentUserDetailsResponse.data?.user || currentUserDetailsResponse.user
+      // Handle the new response format: { status, success, data, message }
+      const currentUserDetailsData = currentUserDetailsResponse.success ? currentUserDetailsResponse.data : currentUserDetailsResponse
+      const currentUserDetails = currentUserDetailsData.user || currentUserDetailsData
       
       const currentUsersSkillsResponse = await fetch(`/api/skills/user/${currentUser._id}`)
       if (!currentUsersSkillsResponse.ok) {
         console.error('Failed to get current user skills')
         return
       }
-      const currentUserSkills = await currentUsersSkillsResponse.json()
+      const currentUserSkillsResponseData = await currentUsersSkillsResponse.json()
+      // Handle the new response format: { status, success, data, message }
+      const currentUserSkillsData = currentUserSkillsResponseData.success ? currentUserSkillsResponseData.data.skills : currentUserSkillsResponseData
+      const currentUserSkills = Array.isArray(currentUserSkillsData) ? currentUserSkillsData : currentUserSkillsData.skills || []
       
       // For simplicity, we'll use the first skill of the current user
       // In a real implementation, we might want to let the user choose which skill to offer
@@ -120,7 +127,9 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
         body: JSON.stringify(exchangeData)
       })
       
-      if (response.ok) {
+      const responseData = await response.json()
+      // Handle the new response format: { status, success, data, message }
+      if (response.ok && responseData.success) {
         console.log('Exchange request sent successfully')
         setSubmitted(true)
         setTimeout(() => {
@@ -129,7 +138,7 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
           onOpenChange(false)
         }, 2000)
       } else {
-        console.error('Failed to send exchange request:', await response.text())
+        console.error('Failed to send exchange request:', responseData.message || await response.text())
       }
     } catch (error) {
       console.error('Error sending exchange request:', error)
