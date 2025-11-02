@@ -102,7 +102,7 @@ export const getCurrentUser = async (
       return;
     }
 
-    sendResponse(res, successResponse(user, 'Current user retrieved successfully'));
+    sendResponse(res, successResponse({ user }, 'Current user retrieved successfully'));
  } catch (error) {
     console.error('Get user error:', error);
     sendResponse(res, errorResponse('Internal server error', 500));

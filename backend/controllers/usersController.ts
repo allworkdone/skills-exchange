@@ -14,6 +14,18 @@ export const getUserProfile = async (
   try {
     const { userId } = req.params;
 
+    // Check if userId is provided and is a valid ObjectId format
+    if (!userId || userId === 'undefined') {
+      sendResponse(res, errorResponse('User ID is required and must be a valid ID', 400));
+      return;
+    }
+
+    // Check if userId is a valid ObjectId format (24 character hex string)
+    if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+      sendResponse(res, errorResponse('Invalid User ID format', 400));
+      return;
+    }
+
     const user = await User.findById(userId)
       .populate('skills')
       .populate({
@@ -26,7 +38,7 @@ export const getUserProfile = async (
       return;
     }
 
-    sendResponse(res, successResponse(user, 'User profile retrieved successfully'));
+    sendResponse(res, successResponse({ user }, 'User profile retrieved successfully'));
  } catch (error) {
     console.error('Get user profile error:', error);
     sendResponse(res, errorResponse('Internal server error', 500));
@@ -109,7 +121,7 @@ export const searchUsers = async (
       ],
     }).populate('skills');
 
-    sendResponse(res, successResponse(users, 'Users searched successfully'));
+    sendResponse(res, successResponse({ users }, 'Users searched successfully'));
   } catch (error) {
     console.error('Search users error:', error);
     sendResponse(res, errorResponse('Internal server error', 500));

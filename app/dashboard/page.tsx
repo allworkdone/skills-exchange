@@ -69,17 +69,19 @@ export default function DashboardPage() {
         if (userRes.ok) {
           const userResponse: ApiResponse<UserModel> | any = await userRes.json();
           const userData = userResponse.success ? userResponse.data : userResponse;
-          setUser(userData);
+          setUser(userData.user);
         }
         if (skillsRes.ok) {
           const skillsResponse: ApiResponse<GetSkillsResponse> | any = await skillsRes.json();
           const skillsData = skillsResponse.success ? skillsResponse.data : skillsResponse;
-          setSkills(skillsData)
+          // The API returns skills directly as an array, not in a 'skills' property
+          setSkills(Array.isArray(skillsData) ? skillsData : skillsData.skills || [])
         }
         if (exchangesRes.ok) {
           const exchangesResponse: ApiResponse<GetExchangesResponse> | any = await exchangesRes.json();
           const exchangesData = exchangesResponse.success ? exchangesResponse.data : exchangesResponse;
-          setExchanges(exchangesData)
+          // The API returns exchanges directly, not in an 'exchanges' property
+          setExchanges(Array.isArray(exchangesData) ? exchangesData : exchangesData.exchanges || [])
         }
       } catch (error) {
         toast.error("Failed to load dashboard")
@@ -100,8 +102,8 @@ export default function DashboardPage() {
     return <div className="container mx-auto px-4 py-12">Loading user data...</div>
   }
 
-  const completedExchanges = exchanges.filter((e) => e.status === "completed").length
-  const pendingExchanges = exchanges.filter((e) => e.status === "pending").length
+  const completedExchanges = exchanges?.filter((e) => e.status === "completed").length || 0
+  const pendingExchanges = exchanges?.filter((e) => e.status === "pending").length || 0
 
   return (
     <div className="container mx-auto px-4 py-12">
@@ -117,7 +119,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Skills Offered</p>
-                  <p className="text-2xl font-bold mt-1">{skills.length}</p>
+                  <p className="text-2xl font-bold mt-1">{skills?.length || 0}</p>
                 </div>
                 <Zap className="w-8 h-8 text-primary/20" />
               </div>
@@ -179,7 +181,7 @@ export default function DashboardPage() {
               </Link>
             </div>
 
-            {skills.length === 0 ? (
+            {skills?.length === 0 || skills === undefined ? (
               <Card>
                 <CardContent className="pt-6 text-center">
                   <p className="text-muted-foreground mb-4">No skills added yet</p>

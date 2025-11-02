@@ -48,23 +48,23 @@ export default function ChatPage() {
           const response: GetChatsResponse | any = await res.json();
           // Handle the new response format: { status, success, data, message }
           const data = response.success ? response.data : response;
-          setChats(data)
-          if (data.length > 0) {
+          setChats(data.chats)
+          if (data.chats.length > 0) {
             try {
-              const firstChatRes = await fetch(`/api/chats/${data[0]._id}`, {
+              const firstChatRes = await fetch(`/api/chats/${data.chats[0]._id}`, {
                 headers: { Authorization: `Bearer ${token}` },
               });
               
               if (firstChatRes.ok) {
                 const fullChatResponse: GetChatResponse | any = await firstChatRes.json();
                 const fullChatData = fullChatResponse.success ? fullChatResponse.data : fullChatResponse;
-                setSelectedChat(fullChatData);
+                setSelectedChat(fullChatData.chat);
               } else {
-                setSelectedChat(data[0]);
+                setSelectedChat(data.chats[0]);
               }
             } catch (fetchError) {
               console.error('Failed to fetch full chat data:', fetchError);
-              setSelectedChat(data[0]);
+              setSelectedChat(data.chats[0]);
             }
           }
         }
@@ -153,7 +153,7 @@ export default function ChatPage() {
             const response = await res.json();
             // Handle the new response format: { status, success, data, message }
             const updatedChat = response.success ? response.data : response;
-            setSelectedChat(updatedChat);
+            setSelectedChat(updatedChat.chat);
           }
         } catch (error) {
           console.error('Failed to fetch updated chat:', error);
@@ -265,9 +265,9 @@ export default function ChatPage() {
                               const response = await res.json();
                               // Handle the new response format: { status, success, data, message }
                               const updatedChat = response.success ? response.data : response;
-                              setSelectedChat(updatedChat);
+                              setSelectedChat(updatedChat.chat);
                               // Also update the ref immediately
-                              selectedChatRef.current = updatedChat;
+                              selectedChatRef.current = updatedChat.chat;
                             }
                           } catch (error) {
                             console.error('Failed to fetch updated chat:', error);

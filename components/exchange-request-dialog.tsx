@@ -74,7 +74,8 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
         console.error('Failed to get current user')
         return
       }
-      const currentUser = await currentUserIdResponse.json()
+      const currentUserResponse = await currentUserIdResponse.json()
+      const currentUser = currentUserResponse.data?.user || currentUserResponse.user
       
       // Find the current user's skill that matches what the recipient is seeking
       const currentUsersResponse = await fetch(`/api/users/${currentUser._id}`)
@@ -82,7 +83,8 @@ export function ExchangeRequestDialog({ open, onOpenChange, skill }: ExchangeReq
         console.error('Failed to get current user details')
         return
       }
-      const currentUserDetails = await currentUsersResponse.json()
+      const currentUserDetailsResponse = await currentUsersResponse.json()
+      const currentUserDetails = currentUserDetailsResponse.data?.user || currentUserDetailsResponse.user
       
       const currentUsersSkillsResponse = await fetch(`/api/skills/user/${currentUser._id}`)
       if (!currentUsersSkillsResponse.ok) {

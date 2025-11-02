@@ -104,7 +104,11 @@ export default function HomePage() {
   })
 
   const handleViewProfile = (userId: string) => {
-    router.push(`/profile/${userId}`)
+    if (userId && userId !== 'undefined') {
+      router.push(`/profile/${userId}`)
+    } else {
+      console.error('Invalid userId provided to handleViewProfile:', userId)
+    }
   }
 
   const handleRequestExchange = (skillId: string) => {

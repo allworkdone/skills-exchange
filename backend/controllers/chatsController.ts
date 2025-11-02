@@ -17,7 +17,7 @@ export const getChats = async (
       .populate('exchange')
       .sort({ updatedAt: -1 });
 
-    sendResponse(res, successResponse(chats, 'Chats retrieved successfully'));
+    sendResponse(res, successResponse({ chats }, 'Chats retrieved successfully'));
   } catch (error) {
     console.error('Get chats error:', error);
     sendResponse(res, errorResponse('Internal server error', 500));
@@ -46,7 +46,7 @@ export const getChat = async (
       return;
     }
 
-    sendResponse(res, successResponse(chat, 'Chat retrieved successfully'));
+    sendResponse(res, successResponse({ chat }, 'Chat retrieved successfully'));
  } catch (error) {
     console.error('Get chat error:', error);
     sendResponse(res, errorResponse('Internal server error', 500));
@@ -117,7 +117,7 @@ export const markAsRead = async (
 
     await chat.save();
 
-    sendResponse(res, successResponse(null, 'Messages marked as read'));
+    sendResponse(res, successResponse({}, 'Messages marked as read'));
   } catch (error) {
     console.error('Mark as read error:', error);
     sendResponse(res, errorResponse('Internal server error', 500));
