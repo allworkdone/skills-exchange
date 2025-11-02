@@ -3,6 +3,7 @@ import { User } from '../models/User';
 import { Exchange } from '../models/Exchange';
 import { Skill } from '../models/Skill';
 import { Review } from '../models/Review';
+import { successResponse, errorResponse, sendResponse } from '../utils/response';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -21,7 +22,7 @@ export const getDashboard = async (
 ): Promise<void> => {
   try {
     if (!isAdmin(req)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -49,7 +50,7 @@ export const getDashboard = async (
       .limit(10)
       .populate('skills');
 
-    res.status(200).json({
+    sendResponse(res, successResponse({ 
       stats: {
         totalUsers,
         totalSkills,
@@ -60,10 +61,10 @@ export const getDashboard = async (
       },
       recentExchanges,
       topUsers,
-    });
+    }, 'Dashboard data retrieved successfully'));
   } catch (error) {
     console.error('Get dashboard error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
   }
 };
 
@@ -73,16 +74,16 @@ export const getAllUsers = async (
 ): Promise<void> => {
   try {
     if (!isAdmin(req)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
     const users = await User.find().populate('skills').sort({ createdAt: -1 });
 
-    res.status(200).json(users);
+    sendResponse(res, successResponse({ users }, 'Users retrieved successfully'));
  } catch (error) {
     console.error('Get all users error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -92,7 +93,7 @@ export const getUserDetails = async (
 ): Promise<void> => {
   try {
     if (!isAdmin(req)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -104,7 +105,7 @@ export const getUserDetails = async (
       .populate('reviews');
 
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      sendResponse(res, errorResponse('User not found', 404));
       return;
     }
 
@@ -112,13 +113,13 @@ export const getUserDetails = async (
       $or: [{ initiator: userId }, { recipient: userId }],
     });
 
-    res.status(200).json({
+    sendResponse(res, successResponse({ 
       user,
       exchanges,
-    });
+    }, 'User details retrieved successfully'));
   } catch (error) {
     console.error('Get user details error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -128,7 +129,7 @@ export const deleteUser = async (
 ): Promise<void> => {
  try {
     if (!isAdmin(req)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -140,10 +141,10 @@ export const deleteUser = async (
       $or: [{ initiator: userId }, { recipient: userId }],
     });
 
-    res.status(200).json({ message: 'User deleted successfully' });
+    sendResponse(res, successResponse({ message: 'User deleted successfully' }, 'User deleted successfully'));
   } catch (error) {
     console.error('Delete user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -153,7 +154,7 @@ export const getAllExchanges = async (
 ): Promise<void> => {
   try {
     if (!isAdmin(req)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -164,10 +165,10 @@ export const getAllExchanges = async (
       .populate('recipientSkill')
       .sort({ createdAt: -1 });
 
-    res.status(200).json(exchanges);
+    sendResponse(res, successResponse({ exchanges }, 'Exchanges retrieved successfully'));
   } catch (error) {
     console.error('Get all exchanges error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -177,7 +178,7 @@ export const getAllSkills = async (
 ): Promise<void> => {
   try {
     if (!isAdmin(req)) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -185,9 +186,9 @@ export const getAllSkills = async (
       .populate('user', 'firstName lastName')
       .sort({ createdAt: -1 });
 
-    res.status(200).json(skills);
+    sendResponse(res, successResponse({ skills }, 'Skills retrieved successfully'));
   } catch (error) {
     console.error('Get all skills error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };

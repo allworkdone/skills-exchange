@@ -3,6 +3,7 @@ import { Exchange } from '../models/Exchange';
 import { User } from '../models/User';
 import { Chat } from '../models/Chat';
 import { findMatches } from '../utils/matching';
+import { successResponse, errorResponse, sendResponse } from '../utils/response';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -31,7 +32,7 @@ export const requestExchange = async (
       if (!recipientSkillId) missingFields.push('recipientSkillId');
       
       console.log('Missing required fields:', missingFields);
-      res.status(400).json({ error: 'All fields are required', missing: missingFields });
+      sendResponse(res, errorResponse('All fields are required', 400));
       return;
     }
 
@@ -69,14 +70,14 @@ export const requestExchange = async (
       await chat.save();
     }
 
-    res.status(201).json({
+    sendResponse(res, successResponse({ 
       message: 'Exchange request sent',
       exchange: populatedExchange,
       chatId: chat._id,
-    });
+    }, 'Exchange request sent successfully', 201));
   } catch (error) {
     console.error('Request exchange error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -100,11 +101,11 @@ export const getExchanges = async (
       .populate('recipientSkill')
       .sort({ createdAt: -1 });
 
-    res.status(200).json(exchanges);
+    sendResponse(res, successResponse({ exchanges }, 'Exchanges retrieved successfully'));
   } catch (error) {
     console.error('Get exchanges error:', error);
-    res.status(500).json({ error: 'Internal server error' });
- }
+    sendResponse(res, errorResponse('Internal server error', 500));
+  }
 };
 
 export const updateExchangeStatus = async (
@@ -117,7 +118,7 @@ export const updateExchangeStatus = async (
 
     const exchange = await Exchange.findById(exchangeId);
     if (!exchange) {
-      res.status(404).json({ error: 'Exchange not found' });
+      sendResponse(res, errorResponse('Exchange not found', 404));
       return;
     }
 
@@ -125,7 +126,7 @@ export const updateExchangeStatus = async (
       exchange.recipient.toString() !== (req as any).userId &&
       exchange.initiator.toString() !== (req as any).userId
     ) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -144,13 +145,13 @@ export const updateExchangeStatus = async (
       .populate('initiatorSkill')
       .populate('recipientSkill');
 
-    res.status(200).json({
+    sendResponse(res, successResponse({ 
       message: 'Exchange status updated',
       exchange: populatedExchange,
-    });
+    }, 'Exchange status updated successfully'));
   } catch (error) {
     console.error('Update exchange status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -164,7 +165,7 @@ export const submitReview = async (
 
     const exchange = await Exchange.findById(exchangeId);
     if (!exchange) {
-      res.status(404).json({ error: 'Exchange not found' });
+      sendResponse(res, errorResponse('Exchange not found', 404));
       return;
     }
 
@@ -175,7 +176,7 @@ export const submitReview = async (
       exchange.recipientRating = rating;
       exchange.recipientReview = review;
     } else {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -191,13 +192,13 @@ export const submitReview = async (
       }
     }
 
-    res.status(200).json({
+    sendResponse(res, successResponse({ 
       message: 'Review submitted successfully',
       exchange,
-    });
+    }, 'Review submitted successfully'));
   } catch (error) {
     console.error('Submit review error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -208,7 +209,7 @@ export const getMatches = async (
   try {
     const user = await User.findById((req as any).userId).populate('skills');
     if (!user) {
-      res.status(404).json({ error: 'User not found' });
+      sendResponse(res, errorResponse('User not found', 404));
       return;
     }
 
@@ -226,9 +227,9 @@ export const getMatches = async (
       })
     );
 
-    res.status(200).json(matchedUsers);
+    sendResponse(res, successResponse({ matchedUsers }, 'Matches retrieved successfully'));
   } catch (error) {
     console.error('Get matches error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };

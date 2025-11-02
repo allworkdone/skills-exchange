@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { Skill } from '../models/Skill';
 import { User } from '../models/User';
 import { Types } from 'mongoose';
+import { successResponse, errorResponse, sendResponse } from '../utils/response';
 
 interface AuthRequest extends Request {
   userId?: string;
@@ -16,7 +17,7 @@ export const createSkill = async (
     const { name, category, description, proficiencyLevel } = req.body;
 
     if (!name || !category || !description) {
-      res.status(400).json({ error: 'Name, category, and description are required' });
+      sendResponse(res, errorResponse('Name, category, and description are required', 400));
       return;
     }
 
@@ -36,13 +37,13 @@ export const createSkill = async (
       await user.save();
     }
 
-    res.status(201).json({
+    sendResponse(res, successResponse({ 
       message: 'Skill created successfully',
       skill,
-    });
+    }, 'Skill created successfully', 201));
   } catch (error) {
     console.error('Create skill error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -69,10 +70,10 @@ export const getSkills = async (req: Request, res: Response): Promise<void> => {
 
     const skills = await Skill.find(filter).populate('user', 'firstName lastName profilePicture location');
 
-    res.status(200).json(skills);
+    sendResponse(res, successResponse({ skills }, 'Skills retrieved successfully'));
   } catch (error) {
     console.error('Get skills error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -97,10 +98,10 @@ export const getUserSkills = async (
       skills = await Skill.find({ user: userId });
     }
 
-    res.status(200).json(skills);
+    sendResponse(res, successResponse({ skills }, 'User skills retrieved successfully'));
   } catch (error) {
     console.error('Get user skills error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -114,12 +115,12 @@ export const updateSkill = async (
 
     const skill = await Skill.findById(skillId);
     if (!skill) {
-      res.status(404).json({ error: 'Skill not found' });
+      sendResponse(res, errorResponse('Skill not found', 404));
       return;
     }
 
     if (skill.user.toString() !== (req as any).userId) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -130,13 +131,13 @@ export const updateSkill = async (
 
     await skill.save();
 
-    res.status(200).json({
+    sendResponse(res, successResponse({ 
       message: 'Skill updated successfully',
       skill,
-    });
+    }, 'Skill updated successfully'));
   } catch (error) {
     console.error('Update skill error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
 
@@ -149,12 +150,12 @@ export const deleteSkill = async (
 
     const skill = await Skill.findById(skillId);
     if (!skill) {
-      res.status(404).json({ error: 'Skill not found' });
+      sendResponse(res, errorResponse('Skill not found', 404));
       return;
     }
 
     if (skill.user.toString() !== (req as any).userId) {
-      res.status(403).json({ error: 'Unauthorized' });
+      sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
@@ -166,9 +167,9 @@ export const deleteSkill = async (
       await user.save();
     }
 
-    res.status(200).json({ message: 'Skill deleted successfully' });
+    sendResponse(res, successResponse({ message: 'Skill deleted successfully' }, 'Skill deleted successfully'));
  } catch (error) {
     console.error('Delete skill error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    sendResponse(res, errorResponse('Internal server error', 500));
  }
 };
