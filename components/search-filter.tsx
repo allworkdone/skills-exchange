@@ -7,7 +7,7 @@ import { categories } from "@/lib/mock-data"
 
 interface SearchFilterProps {
   searchQuery: string
-  selectedCategory: string
+ selectedCategory: string
   onSearchChange: (query: string) => void
   onCategoryChange: (category: string) => void
 }
@@ -33,7 +33,7 @@ export function SearchFilter({ searchQuery, selectedCategory, onSearchChange, on
             variant={selectedCategory === category ? "default" : "outline"}
             size="sm"
             onClick={() => onCategoryChange(category)}
-            className="rounded-full"
+            className="rounded-full text-xs sm:text-sm py-1.5 px-3 sm:py-2 sm:px-3"
           >
             {category}
           </Button>

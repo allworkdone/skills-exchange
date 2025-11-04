@@ -23,9 +23,9 @@ interface Skill {
  user: User
  offering: string
  offeringCategory: string
-  seeking: string
+ seeking: string
  seekingCategory: string
-  description: string
+ description: string
  level: "Beginner" | "Intermediate" | "Advanced"
   availability: string
 }
@@ -51,10 +51,10 @@ export function SkillCard({ skill, onViewProfile, onRequestExchange }: SkillCard
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base leading-tight">{skill.user.name}</h3>
+            <h3 className="font-semibold text-base leading-tight truncate">{skill.user.name}</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
               <MapPin className="h-3 w-3" />
-              {skill.user.location}
+              <span className="truncate">{skill.user.location}</span>
             </p>
           </div>
         </div>
@@ -63,46 +63,47 @@ export function SkillCard({ skill, onViewProfile, onRequestExchange }: SkillCard
       <CardContent className="flex-1 space-y-4">
         <div className="space-y-3">
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
               <Badge variant="default" className="bg-primary text-primary-foreground">
                 Offering
               </Badge>
               <Badge variant="outline">{skill.offeringCategory}</Badge>
             </div>
-            <p className="font-semibold text-foreground">{skill.offering}</p>
+            <p className="font-semibold text-foreground break-words">{skill.offering}</p>
           </div>
 
           <div className="flex items-center justify-center py-2">
-            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+            <ArrowRight className="h-5 w-5 text-muted-foreground hidden sm:block" />
+            <ArrowRight className="h-4 w-4 text-muted-foreground sm:hidden" />
           </div>
 
           <div>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
               <Badge variant="secondary">Seeking</Badge>
               <Badge variant="outline">{skill.seekingCategory}</Badge>
             </div>
-            <p className="font-semibold text-foreground">{skill.seeking}</p>
+            <p className="font-semibold text-foreground break-words">{skill.seeking}</p>
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed">{skill.description}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-3">{skill.description}</p>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
-            <Clock className="h-4 w-4" />
-            {skill.availability}
+            <Clock className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{skill.availability}</span>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-xs self-start sm:self-auto">
             {skill.level}
           </Badge>
         </div>
       </CardContent>
 
-      <CardFooter className="flex gap-2">
-        <Button variant="outline" className="flex-1 bg-transparent" onClick={() => onViewProfile(skill.userId)}>
+      <CardFooter className="flex flex-col sm:flex-row gap-2">
+        <Button variant="outline" className="w-full sm:flex-1 bg-transparent" onClick={() => onViewProfile(skill.userId)}>
           View Profile
         </Button>
-        <Button className="flex-1" onClick={() => onRequestExchange(skill.id)}>
+        <Button className="w-full sm:flex-1" onClick={() => onRequestExchange(skill.id)}>
           Request Exchange
         </Button>
       </CardFooter>

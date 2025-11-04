@@ -125,7 +125,7 @@ export default function HomePage() {
     <div className="min-h-screen">
       <HeroSection />
 
-      <section className="container mx-auto px-4 py-12">
+      <section className="container mx-auto px-4 py-8 sm:py-12">
         <div className="space-y-8">
           <div className="max-w-2xl mx-auto">
             <SearchFilter
@@ -137,7 +137,7 @@ export default function HomePage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
               <h2 className="text-2xl font-bold">
                 Available Skills{" "}
                 <span className="text-muted-foreground text-lg font-normal">({filteredSkills.length})</span>
@@ -149,7 +149,7 @@ export default function HomePage() {
                 <p className="text-muted-foreground text-lg">No skills found matching your search.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredSkills.map((skill) => (
                   <SkillCard
                     key={skill.id}
