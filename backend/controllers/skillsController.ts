@@ -1,13 +1,9 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { Skill } from '../models/Skill';
 import { User } from '../models/User';
 import { Types } from 'mongoose';
 import { successResponse, errorResponse, sendResponse } from '../utils/response';
-
-interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
-}
+import { AuthRequest } from '../types';
 
 export const createSkill = async (
   req: AuthRequest,
@@ -26,12 +22,12 @@ export const createSkill = async (
       category,
       description,
       proficiencyLevel: proficiencyLevel || 'Beginner',
-      user: (req as any).userId,
+      user: req.userId,
     });
 
     await skill.save();
 
-    const user = await User.findById((req as any).userId);
+    const user = await User.findById(req.userId);
     if (user) {
       user.skills.push(skill._id.toString());
       await user.save();
@@ -47,7 +43,7 @@ export const createSkill = async (
  }
 };
 
-export const getSkills = async (req: Request, res: Response): Promise<void> => {
+export const getSkills = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { category } = req.query;
     // Check for userId in both query parameters and route parameters
@@ -83,7 +79,7 @@ export const getUserSkills = async (
 ): Promise<void> => {
   try {
     // Handle both string and ObjectId formats for user field
-    const userId = (req as any).userId;
+    const userId = req.userId;
     let skills;
     
     try {
@@ -119,7 +115,7 @@ export const updateSkill = async (
       return;
     }
 
-    if (skill.user.toString() !== (req as any).userId) {
+    if (skill.user.toString() !== req.userId) {
       sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
@@ -154,14 +150,14 @@ export const deleteSkill = async (
       return;
     }
 
-    if (skill.user.toString() !== (req as any).userId) {
+    if (skill.user.toString() !== req.userId) {
       sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
     await Skill.deleteOne({ _id: skillId });
 
-    const user = await User.findById((req as any).userId);
+    const user = await User.findById(req.userId);
     if (user) {
       user.skills = user.skills.filter((id) => id.toString() !== skillId);
       await user.save();

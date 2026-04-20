@@ -1,14 +1,10 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { Exchange } from '../models/Exchange';
 import { User } from '../models/User';
 import { Chat } from '../models/Chat';
 import { findMatches } from '../utils/matching';
 import { successResponse, errorResponse, sendResponse } from '../utils/response';
-
-interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
-}
+import { AuthRequest } from '../types';
 
 export const requestExchange = async (
   req: AuthRequest,
@@ -22,7 +18,7 @@ export const requestExchange = async (
       initiatorSkillId,
       recipientSkillId,
       message,
-      userId: (req as any).userId
+      userId: req.userId
     });
 
     if (!recipientId || !initiatorSkillId || !recipientSkillId) {
@@ -37,7 +33,7 @@ export const requestExchange = async (
     }
 
     const exchange = new Exchange({
-      initiator: (req as any).userId,
+      initiator: req.userId,
       recipient: recipientId,
       initiatorSkill: initiatorSkillId,
       recipientSkill: recipientSkillId,
@@ -54,7 +50,7 @@ export const requestExchange = async (
       .populate('recipientSkill');
 
     const chat = new Chat({
-      users: [(req as any).userId, recipientId],
+      users: [req.userId, recipientId],
       exchange: exchange._id,
     });
     await chat.save();
@@ -62,7 +58,7 @@ export const requestExchange = async (
     // Add the initial message to the chat after the chat is created
     if (message) {
       (chat.messages as any).push({
-        sender: (req as any).userId,
+        sender: req.userId,
         content: message,
         timestamp: new Date(),
         read: false,
@@ -89,7 +85,7 @@ export const getExchanges = async (
     const { status } = req.query;
 
     const filter: any = {
-      $or: [{ initiator: (req as any).userId }, { recipient: (req as any).userId }],
+      $or: [{ initiator: req.userId }, { recipient: req.userId }],
     };
 
     if (status) filter.status = status;
@@ -123,8 +119,8 @@ export const updateExchangeStatus = async (
     }
 
     if (
-      exchange.recipient.toString() !== (req as any).userId &&
-      exchange.initiator.toString() !== (req as any).userId
+      exchange.recipient.toString() !== req.userId &&
+      exchange.initiator.toString() !== req.userId
     ) {
       sendResponse(res, errorResponse('Unauthorized', 403));
       return;
@@ -169,10 +165,10 @@ export const submitReview = async (
       return;
     }
 
-    if (exchange.initiator.toString() === (req as any).userId) {
+    if (exchange.initiator.toString() === req.userId) {
       exchange.initiatorRating = rating;
       exchange.initiatorReview = review;
-    } else if (exchange.recipient.toString() === (req as any).userId) {
+    } else if (exchange.recipient.toString() === req.userId) {
       exchange.recipientRating = rating;
       exchange.recipientReview = review;
     } else {
@@ -184,7 +180,7 @@ export const submitReview = async (
 
     if (exchange.initiatorRating && exchange.recipientRating) {
       const avgRating = (exchange.initiatorRating + exchange.recipientRating) / 2;
-      const user = await User.findById((req as any).userId);
+      const user = await User.findById(req.userId);
       if (user) {
         const oldRating = user.rating || 0;
         user.rating = (oldRating + avgRating) / 2;
@@ -207,7 +203,7 @@ export const getMatches = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = await User.findById((req as any).userId).populate('skills');
+    const user = await User.findById(req.userId).populate('skills');
     if (!user) {
       sendResponse(res, errorResponse('User not found', 404));
       return;

@@ -1,18 +1,14 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { Chat } from '../models/Chat';
 import { successResponse, errorResponse, sendResponse } from '../utils/response';
-
-interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
-}
+import { AuthRequest } from '../types';
 
 export const getChats = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const chats = await Chat.find({ users: (req as any).userId })
+    const chats = await Chat.find({ users: req.userId })
       .populate('users', 'firstName lastName profilePicture')
       .populate('exchange')
       .sort({ updatedAt: -1 });
@@ -41,7 +37,7 @@ export const getChat = async (
       return;
     }
 
-    if (!chat.users.map((u: any) => u._id.toString()).includes((req as any).userId)) {
+    if (!chat.users.map((u: any) => u._id.toString()).includes(req.userId)) {
       sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
@@ -72,13 +68,13 @@ export const sendMessage = async (
       return;
     }
 
-    if (!chat.users.map((u) => u.toString()).includes((req as any).userId)) {
+    if (!req.userId || !chat.users.map((u) => u.toString()).includes(req.userId)) {
       sendResponse(res, errorResponse('Unauthorized', 403));
       return;
     }
 
     (chat.messages as any).push({
-      sender: (req as any).userId,
+      sender: req.userId,
       content,
       timestamp: new Date(),
       read: false,
@@ -110,7 +106,7 @@ export const markAsRead = async (
     }
 
     chat.messages.forEach((msg) => {
-      if (msg.sender.toString() !== (req as any).userId) {
+      if (msg.sender.toString() !== req.userId) {
         msg.read = true;
       }
     });

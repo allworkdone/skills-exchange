@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { Express } from 'express';
+import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { Server as SocketIOServer } from 'socket.io';
 import { createServer } from 'http';
@@ -98,7 +98,7 @@ io.on('connection', (socket) => {
   });
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
     environment: NODE_ENV,

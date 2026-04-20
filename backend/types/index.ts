@@ -1,6 +1,11 @@
 import { Document, Types } from 'mongoose';
 import { Request } from 'express';
 
+export interface AuthRequest extends Request {
+  userId?: string;
+  email?: string;
+}
+
 export interface IUser extends Document {
   _id: string;
  firstName: string;
@@ -99,18 +104,4 @@ export type ExchangeStatus =
 export interface IJWTPayload {
   userId: string;
   email: string;
-}
-
-export interface AuthRequest {
-  userId?: string;
-  email?: string;
-}
-
-declare global {
-  namespace Express {
-    interface Request {
-      userId?: string;
-      email?: string;
-    }
- }
 }

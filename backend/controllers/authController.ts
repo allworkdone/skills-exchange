@@ -1,14 +1,10 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { User } from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { successResponse, errorResponse, sendResponse } from '../utils/response';
+import { AuthRequest } from '../types';
 
-interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
-}
-
-export const register = async (req: Request, res: Response): Promise<void> => {
+export const register = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { firstName, lastName, email, password, location } = req.body;
 
@@ -51,7 +47,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
  }
 };
 
-export const login = async (req: Request, res: Response): Promise<void> => {
+export const login = async (req: AuthRequest, res: Response): Promise<void> => {
  try {
     const { email, password } = req.body;
 
@@ -96,7 +92,7 @@ export const getCurrentUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = await User.findById((req as any).userId).populate('skills').populate('reviews');
+    const user = await User.findById(req.userId).populate('skills').populate('reviews');
     if (!user) {
       sendResponse(res, errorResponse('User not found', 404));
       return;

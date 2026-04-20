@@ -1,9 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
-import { errorResponse } from '../utils/response';
+import { errorResponse, sendResponse } from '../utils/response';
+import { AuthRequest } from '../types';
 
 export const authMiddleware = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): void => {
@@ -11,18 +12,18 @@ export const authMiddleware = (
   const token = authHeader ? authHeader.split(' ')[1] : undefined;
 
   if (!token) {
-    errorResponse('No token provided', 401);
+    sendResponse(res, errorResponse('No token provided', 401));
     return;
   }
 
- const decoded = verifyToken(token);
+  const decoded = verifyToken(token);
 
   if (!decoded) {
-    errorResponse('Invalid or expired token', 401);
+    sendResponse(res, errorResponse('Invalid or expired token', 401));
     return;
   }
 
-  (req as any).userId = decoded.userId;
-  (req as any).email = decoded.email;
+  req.userId = decoded.userId;
+  req.email = decoded.email;
   next();
 };

@@ -1,19 +1,15 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { User } from '../models/User';
 import { Exchange } from '../models/Exchange';
 import { Skill } from '../models/Skill';
 import { Review } from '../models/Review';
 import { successResponse, errorResponse, sendResponse } from '../utils/response';
-
-interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
-}
+import { AuthRequest } from '../types';
 
 const ADMIN_ID = process.env.ADMIN_ID || 'admin';
 
 const isAdmin = (req: AuthRequest): boolean => {
-  return (req as any).userId === ADMIN_ID;
+  return req.userId === ADMIN_ID;
 };
 
 export const getDashboard = async (

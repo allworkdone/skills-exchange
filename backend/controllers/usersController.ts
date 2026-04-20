@@ -1,14 +1,10 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { User } from '../models/User';
 import { successResponse, errorResponse, sendResponse } from '../utils/response';
-
-interface AuthRequest extends Request {
-  userId?: string;
-  email?: string;
-}
+import { AuthRequest } from '../types';
 
 export const getUserProfile = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
@@ -52,7 +48,7 @@ export const updateProfile = async (
   try {
     const { firstName, lastName, bio, location, profilePicture } = req.body;
 
-    const user = await User.findById((req as any).userId);
+    const user = await User.findById(req.userId);
     if (!user) {
       sendResponse(res, errorResponse('User not found', 404));
       return;
@@ -74,7 +70,7 @@ export const updateProfile = async (
 };
 
 export const getAllUsers = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
@@ -101,7 +97,7 @@ export const getAllUsers = async (
 };
 
 export const searchUsers = async (
-  req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
