@@ -1,9 +1,12 @@
 import { Document, Types } from 'mongoose';
-import { Request } from 'express';
 
-export interface AuthRequest extends Request {
+export interface AuthRequest {
   userId?: string;
   email?: string;
+  body: any;
+  params: any;
+  query: any;
+  headers: any;
 }
 
 export interface IUser extends Document {
